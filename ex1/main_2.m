@@ -21,8 +21,8 @@ function data=load_images(path)
 end
 
 function [features,descriptor] = compute_sift(data)
-    features= cell(size(data,3)); %A frame is a disk of center f(1:2), scale f(3) and orientation f(4)
-    descriptor= cell (size(data,3));
+    features= cell(size(data,3),1); %A frame is a disk of center f(1:2), scale f(3) and orientation f(4)
+    descriptor= cell (size(data,3),1);
     f = waitbar(0,'Please wait...');
     for i=1:size(data,3)
        f = waitbar(i/size(data,3),f,'Please wait...');

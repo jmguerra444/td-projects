@@ -7,7 +7,7 @@ if ~true
     points=mark_images('data\data\images\init_texture',num_vertexes);
     save points
 else
-    load('points_ok.mat');
+    %load('points_ok.mat');
 end
 
 %% Load Poly and generate intrinsics matrix
@@ -39,7 +39,7 @@ for i=1:size(points,3)
     world_points(any(isnan(image_points), 2), :) = [];
     image_points(any(isnan(image_points), 2), :) = [];
     [WO(:,:,i),WL(:,:,i)] = estimateWorldCameraPose(image_points,...
-        world_points,cam_par,'MaxReprojectionError',6);
+        world_points,cam_par,'MaxReprojectionError',15);
     
     plotCamera('Size',0.05,'Orientation',WO(:,:,i),'Location',...
      WL(:,:,i));
@@ -56,17 +56,18 @@ function points= mark_images(path, num_vertexes)
    old_path = cd; 
    cd(path);
    files= dir('**/*.jpg');
-   points = NaN(num_vertexes,3,length(files));
+   points = NaN(num_vertexes,2,length(files));
+   figure('units','normalized','outerposition',[0 0 1 1])
+
    for j=1:num_vertexes
        for i= 1:length(files)
-       figure('units','normalized','outerposition',[0 0 1 1])
        imshow(imread(files(i).name))
        title(strcat('click on the outside left of image to skip-- current corner: -',num2str(j)));
        [x,y]=getpts;
        points(j,1:2,i)= [x,y];
-       points(j,3,i)=i;
        end
        uiwait(msgbox('track next point'));
+       
    end
    points(points<0)=NaN;
    cd(old_path)
