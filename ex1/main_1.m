@@ -4,15 +4,15 @@ num_vertexes = 8;
 
 %% Get points
 if ~true
-    points=mark_images('data\data\images\init_texture',num_vertexes);
+    points=mark_images('data/data/images/init_texture',num_vertexes);
     save points
 else
-    %load('points_ok.mat');
+    load('points_ok.mat');
 end
 
 %% Load Poly and generate intrinsics matrix
 % Load Ply
-[ply_vertex, ~ ] = read_ply('data\data\model\teabox.ply');
+[ply_vertex, ~ ] = read_ply('data/data/model/teabox.ply');
 
 %Camera Parameters
 fx = 2960.37845;  %Ku*f
@@ -51,11 +51,11 @@ clear fx fy s cx cy world_points image_points
 
 %% 
 function points= mark_images(path, num_vertexes)
-   imshow(imread('data\data\images\init_texture\guia.png'))
+   imshow(imread('data/data/images/init_texture/guia.png'))
    uiwait(msgbox('plase follow the shown patern')) 
    old_path = cd; 
    cd(path);
-   files= dir('**/*.jpg');
+   files= dir('**/*.JPG');
    points = NaN(num_vertexes,2,length(files));
    figure('units','normalized','outerposition',[0 0 1 1])
 

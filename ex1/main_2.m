@@ -1,5 +1,5 @@
 %Load Data
-images = load_images('data\data\images\init_texture');
+images = load_images('data/data/images/init_texture');
 
 %Compute SIFT features
 [feat,desc]=compute_sift(images);
@@ -8,7 +8,7 @@ images = load_images('data\data\images\init_texture');
 function data=load_images(path)
    old_path = cd; 
    cd(path);
-   files= dir('**/*.jpg');
+   files= dir('**/*.JPG');
    im=imread(files(1).name);
    im=single(rgb2gray(im));
    data = zeros(size(im,1),size(im,2),length(files));
