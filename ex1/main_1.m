@@ -1,9 +1,11 @@
-%%
+%% This script contains Camera pose detection given 2D images and 3D object
+
+
 %Right-Hand Method: index (X), middle (Y), thumb (Z)
 num_vertexes = 8; 
 
 %% Get points
-if ~true
+if ~true %vhange this is you don't want to select 2D points again
     points=mark_images('data/data/images/init_texture',num_vertexes);
     save points
 else
@@ -45,8 +47,9 @@ for i=1:size(points,3)
      WL(:,:,i));
     hold on
 end
-
 hold off
+
+save CameraParams WL WO intrinsic_matrix
 clear fx fy s cx cy world_points image_points
 
 %% 

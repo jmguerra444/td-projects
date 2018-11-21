@@ -1,14 +1,12 @@
 %run('/u/halle/calvaron/home_at/bin/vlfeat-0.9.21//toolbox/vl_setup')
+
 images = load_images('data/data/images/init_texture');
-%     figure;
-%     imshow(in);
-%     h0 = vl_plotframe(f);
 load('CameraParams.mat');
 xAll = [];
 
 
 for imIn = 1:8
-    imIn
+    disp(imIn)
     I = squeeze(images(:,:,imIn));
     [f,d] = vl_sift(I) ;
     %%
@@ -38,15 +36,15 @@ for imIn = 1:8
     for j = (1:size(facestemp,1))
         xCr = computePoints(WLiter,WOiter,intrinsic_matrix,f,vertices,facestemp(j,:) + 1);
         disp('face:')
-        j
+        disp(j)
         size(xCr,1)
         xAll = [xAll; xCr];
     end
-
-   
-end%%
+end
+%%
 figure;
 scatter3(xAll(:,1,:), xAll(:,2,:), xAll(:,3,:))
+
 function xCoorVec=computePoints(WLj,WOj,intrinsic_matrix,f,vertices,visibleTriangle)
 [R, t] = cameraPoseToExtrinsics(WOj, WLj);
 Q = intrinsic_matrix' * R;
