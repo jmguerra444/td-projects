@@ -28,8 +28,8 @@ for imIn = 1:size(images,3) %iterates over camera pose
         normal = cross(vector1,vector2);
         CosTheta = dot(cameraVector,normal)/(norm(cameraVector)*norm(normal));
         ThetaInDegrees = acosd(CosTheta);
-        
-        if ThetaInDegrees < 90
+
+        if ThetaInDegrees < 95
             xList = [xList;i];
         end
     end
