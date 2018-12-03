@@ -8,7 +8,7 @@ load('CameraParams.mat');
 faces(9:10,:) = []; %deletes not visible faces
 centroid = [0.165 0.063 0.093]./2;
 xAll = [];
-
+dAll = [];
 wb = waitbar(0,'Please wait...');
 for imIn = 1:size(images,3) %iterates over camera pose
     
@@ -29,7 +29,7 @@ for imIn = 1:size(images,3) %iterates over camera pose
         CosTheta = dot(cameraVector,normal)/(norm(cameraVector)*norm(normal));
         ThetaInDegrees = acosd(CosTheta);
         
-        if ThetaInDegrees < 90
+        if ThetaInDegrees < 95
             xList = [xList;i];
         end
     end
@@ -38,23 +38,26 @@ for imIn = 1:size(images,3) %iterates over camera pose
     WLiter = WL(:,:,imIn);
     WOiter = WO(:,:,imIn);
     for j = (1:size(facestemp,1)) %find points corresponding to 
-        xCr = computePoints(WLiter,WOiter,intrinsic_matrix,f,vertices,facestemp(j,:) + 1);
+        [xCr, dCr] = computePoints(WLiter,WOiter,intrinsic_matrix,f,d,vertices,facestemp(j,:) + 1);
         xAll = [xAll; xCr];
+        dAll = [dAll; dCr];
     end
 end
 
 close(wb)
 figure;
 scatter3(xAll(:,1,:), xAll(:,2,:), xAll(:,3,:))
+save('desc_loc.mat','xAll', 'dAll');
 
 %% Funtion repository
-function xCoorVec = computePoints(WLj,WOj,intrinsic_matrix,f,vertices,visibleTriangle)
+function [xCoorVec, dListVec] = computePoints(WLj,WOj,intrinsic_matrix,f,d,vertices,visibleTriangle)
 [R, t] = cameraPoseToExtrinsics(WOj, WLj);
 Q = intrinsic_matrix' * R;
 q = intrinsic_matrix' * t';
 C = -Q\q;
 fLine = @(x,y) (C + Q\[x,y,1]');
 xCoorVec = [];
+dListVec = [];
     for i = (1:size(f,2))
         [intersect, ~, ~, ~, xcoor] = TriangleRayIntersection(C, fLine(f(1,i),...
                                        f(2,i)), vertices(visibleTriangle(1),:),...
@@ -62,6 +65,7 @@ xCoorVec = [];
                                        vertices(visibleTriangle(3),:));
         if(intersect)
             xCoorVec = [xCoorVec; xcoor];
+            dListVec = [dListVec; d(:,i)'];
         end
     end
 end
