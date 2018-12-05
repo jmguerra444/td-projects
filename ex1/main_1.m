@@ -5,7 +5,7 @@
 num_vertexes = 8; 
 
 %% Get points
-if ~true %vhange this is you don't want to select 2D points again
+if true %vhange this is you don't want to select 2D points again
     points=mark_images('data/data/images/init_texture',num_vertexes);
     save points
 else
