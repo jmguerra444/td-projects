@@ -8,21 +8,32 @@ if ~exist('images_test','var')
 end
 
 %% hyperparameters and initialization
+plotCam = false;
 iterations = 1000;
-threshold = 50;
+threshold = 40;
 n = 4;
-K = [2960.37845 0 0; 0 2960.37845 0; 1841.68855 1235.23369 1]; %intrinsics
+%Camera Parameters
+fx = 2960.37845;  %Ku*f
+fy = 2960.37845;  %Kv*f     pixel_size_X = pizel_size_Y  
+                  %focal lenght
+s  = 1;
+cx = 1841.68855;    
+cy = 1235.23369;  %projection of camera centre in the image coordinate system  
+
+K = [fx 0 0; s fy 0; cx cy 1];
 cameraParams = cameraParameters('IntrinsicMatrix',K);
 
 
 %% iterate over images
-num_images = 15;
+num_images = 25;
 cameras = cell (num_images,3);
 
-mesh_orig = read_ply('C:\Users\Jorgue Guerra\td-projects\ex1\data\data\model\teabox.ply');
-pcshow(mesh_orig,'VerticalAxis','Y','VerticalAxisDir','down','MarkerSize',1000);
-hold on
+mesh_orig = read_ply('teabox.ply');
 
+if plotCam
+    pcshow(mesh_orig,'VerticalAxis','Y','VerticalAxisDir','down','MarkerSize',1000);
+    hold on
+end 
 for imIn = 1:num_images 
     best_inlier = 0;
     max_inliers = 0;
@@ -50,9 +61,7 @@ for imIn = 1:num_images
         [worldOrientation_est, worldLocation_est, ~ , status] = estimateWorldCameraPose(imagePoints_est,...
             worldPoints, cameraParams, 'MaxReprojectionError', 1000);
 
-        if status == 2
-            continue;
-        end
+        if status == 2; continue; end
         
         [R_est, t_est] = cameraPoseToExtrinsics(worldOrientation_est, worldLocation_est);
         inliers = 0;
@@ -76,14 +85,17 @@ for imIn = 1:num_images
         
         
         % compute better R|t with inliners found
-        if inliers > 5 %arbitrary thershold
+        if inliers > max_inliers %arbitrary thershold
             
             %better model
             [worldOrientation_est, worldLocation_est, ~ , status] = estimateWorldCameraPose(image_point_est,...
                 world_point_est, cameraParams, 'MaxReprojectionError', 1000); 
             %better camera pose
+            if status == 2; continue; end
+            try
             [R_est, t_est] = cameraPoseToExtrinsics(worldOrientation_est, worldLocation_est);
-
+            catch
+            end
             inliers_better_model = 0;
             
             for j = 1:size(matches,2)
@@ -118,20 +130,27 @@ for imIn = 1:num_images
     
     cam_size = 0.0125;
     WO = best_WO; WL = best_WL;
-    plotCamera('Size',cam_size,'Orientation',WO,'Location',WL,'color',[1 0 0]);
-    hold on
-
+    
+    if plotCam
+        plotCamera('Size',cam_size,'Orientation',WO,'Location',WL,'color',[1 0 0]);
+        hold on
+    end
 end
 
 %% Attempt to draw 3D points in 2D
+
+K = [1.5*fx 0 0; s 1.5*fy 0; cx cy 1];
+cameraParams = cameraParameters('IntrinsicMatrix',K);
 for j=1:num_images
     close all
     aux = images_test(:,:,j);
     R = cameras {j,1};
     t = cameras {j,2};
-    projectedPoints = worldToImage(cameraParams, R, t, mesh_orig);
+    projectedPoints = worldToImage(cameraParams, R', t, mesh_orig);
     plotBounding3D(projectedPoints', int64(aux))
+    saveas(gcf,char("results/camera"+j),'bmp256')
 end
+save saved_cameras cameras
 
 %% function repository
 function data=load_images(path)
@@ -148,3 +167,30 @@ end
 cd(old_path)
 data = single (data);
 end
+
+function plotBounding3D(vertex_coord,img)
+    figure
+    imshow(img,[])
+    hold on
+    plot(vertex_coord(1,[1,2]),vertex_coord(2,[1,2]),'r','LineWidth',0.5)
+    plot(vertex_coord(1,[2,3]),vertex_coord(2,[2,3]),'r','LineWidth',0.5)
+    plot(vertex_coord(1,[1,4]),vertex_coord(2,[1,4]),'r','LineWidth',0.5)
+    plot(vertex_coord(1,[4,3]),vertex_coord(2,[4,3]),'r','LineWidth',0.5)
+    plot(vertex_coord(1,[4,8]),vertex_coord(2,[4,8]),'r','LineWidth',0.5)
+    plot(vertex_coord(1,[3,7]),vertex_coord(2,[3,7]),'r','LineWidth',0.5)
+    plot(vertex_coord(1,[2,6]),vertex_coord(2,[2,6]),'r','LineWidth',0.5)
+    plot(vertex_coord(1,[1,5]),vertex_coord(2,[1,5]),'r','LineWidth',0.5)
+    plot(vertex_coord(1,[8,5]),vertex_coord(2,[8,5]),'r','LineWidth',0.5)
+    plot(vertex_coord(1,[5,6]),vertex_coord(2,[5,6]),'r','LineWidth',0.5)
+    plot(vertex_coord(1,[7,6]),vertex_coord(2,[7,6]),'r','LineWidth',0.5)
+    plot(vertex_coord(1,[7,8]),vertex_coord(2,[7,8]),'r','LineWidth',0.5)
+    waitforbuttonpress
+end
+
+% function string_ = getFormat(number_)
+%     if number < 10
+%         string_ = string("0"+number_);
+%     else
+%         string_ = string(number_);
+%     end
+% end
