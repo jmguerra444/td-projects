@@ -3,14 +3,30 @@
 load('desc_loc.mat'); %load descriptors and correspondig features
 path_test = 'data\images\detection';
 
+num_images = 3;
+iterations = 100;
+threshold = 30;
+
+
+%% Load // compute new features and 
 if ~exist('images_test','var')
+    disp('loading images')
     images_test = load_images(path_test);
 end
 
+if isfile('new_sift.mat')
+    load('new_sift.mat')
+else
+    fa_ = cell (num_images,1);
+    da_ = cell (num_images,1);
+    for imIn = 1:num_images
+        I = images_test(:,:,imIn);
+        [fa_{imIn}, da_{imIn}] = vl_sift(I);
+    end
+    save new_sift fa_ da_
+end
 %% hyperparameters and initialization
 plotCam = false;
-iterations = 1000;
-threshold = 40;
 n = 4;
 %Camera Parameters
 fx = 2960.37845;  %Ku*f
@@ -23,9 +39,6 @@ cy = 1235.23369;  %projection of camera centre in the image coordinate system
 K = [fx 0 0; s fy 0; cx cy 1];
 cameraParams = cameraParameters('IntrinsicMatrix',K);
 
-
-%% iterate over images
-num_images = 25;
 cameras = cell (num_images,3);
 
 mesh_orig = read_ply('teabox.ply');
@@ -43,10 +56,11 @@ for imIn = 1:num_images
     string_ = strcat("camera ", num2str(imIn)," of ",num2str(num_images)," is being processed");
     wb = waitbar(0, char(string_));
     I = images_test(:,:,imIn);
-    disp ("Computing SIFT features")
-    [fa, da] = vl_sift(I);
-    disp ("Done.")
+    
+    fa = fa_{imIn}; da = da_{imIn};
+    disp ("Getting matches.")
     [matches,~] = vl_ubcmatch(da, dAll');
+    disp ("OK")
     
     for i = 1:iterations
         wb = waitbar(i/iterations,wb, char(string_));
@@ -139,14 +153,14 @@ end
 
 %% Attempt to draw 3D points in 2D
 
-K = [1.5*fx 0 0; s 1.5*fy 0; cx cy 1];
+K = [fx 0 0; s fy 0; cx cy 1];
 cameraParams = cameraParameters('IntrinsicMatrix',K);
 for j=1:num_images
     close all
     aux = images_test(:,:,j);
     R = cameras {j,1};
     t = cameras {j,2};
-    projectedPoints = worldToImage(cameraParams, R', t, mesh_orig);
+    projectedPoints = worldToImage(cameraParams, R, t, mesh_orig);
     plotBounding3D(projectedPoints', int64(aux))
     saveas(gcf,char("results/camera"+j),'bmp256')
 end
@@ -172,6 +186,7 @@ function plotBounding3D(vertex_coord,img)
     figure
     imshow(img,[])
     hold on
+    vertexes = [1 2;2 3;1 4;4 3;4 8;3 7; 2 6; 1 5; 8 5; 5 6; 7 6; 7 8];
     plot(vertex_coord(1,[1,2]),vertex_coord(2,[1,2]),'r','LineWidth',0.5)
     plot(vertex_coord(1,[2,3]),vertex_coord(2,[2,3]),'r','LineWidth',0.5)
     plot(vertex_coord(1,[1,4]),vertex_coord(2,[1,4]),'r','LineWidth',0.5)
@@ -186,11 +201,3 @@ function plotBounding3D(vertex_coord,img)
     plot(vertex_coord(1,[7,8]),vertex_coord(2,[7,8]),'r','LineWidth',0.5)
     waitforbuttonpress
 end
-
-% function string_ = getFormat(number_)
-%     if number < 10
-%         string_ = string("0"+number_);
-%     else
-%         string_ = string(number_);
-%     end
-% end
