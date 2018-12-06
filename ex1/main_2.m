@@ -8,6 +8,7 @@ load('CameraParams.mat');
 faces(9:10,:) = []; %deletes not visible faces
 centroid = [0.165 0.063 0.093]./2;
 xAll = [];
+sift_points = cell(size(images,3),1);
 
 wb = waitbar(0,'Please wait...');
 for imIn = 1:size(images,3) %iterates over camera pose
@@ -15,7 +16,9 @@ for imIn = 1:size(images,3) %iterates over camera pose
     wb = waitbar(imIn/size(images,3),wb,'Please wait...');
     I = images(:,:,imIn);
     [f,d] = vl_sift(I) ;
-    
+    sift_.features = f;
+    sift_.descriptor = d;
+    sift_points{imIn}= sift_;
     cameraVector = centroid - WL(:,:,imIn);
     
     % Estimate a threshold (not so accurate)
@@ -45,7 +48,10 @@ end
 
 close(wb)
 figure;
+save xAll xAll %saves the location of found features
+save sift_points sift_points
 scatter3(xAll(:,1,:), xAll(:,2,:), xAll(:,3,:))
+clear
 
 %% Funtion repository
 function xCoorVec = computePoints(WLj,WOj,intrinsic_matrix,f,vertices,visibleTriangle)

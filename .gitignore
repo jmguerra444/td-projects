@@ -1,0 +1,8 @@
+*.JPG
+*.rar
+*.asv
+*.DS_Store
+test.m
+new_images.mat
+new_sift_points.mat
+my_workspace.mat
